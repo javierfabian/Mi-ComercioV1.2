@@ -2,7 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Nexos POS">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./icons/icon-192.svg">
     <title>Nexos POS - Sistema Comercial</title>
     <style>
         :root {
@@ -13,8 +19,8 @@
             --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-stack); -webkit-font-smoothing: antialiased; }
-        body { background-color: var(--bg-primary); color: var(--text-main); height: 100vh; overflow: hidden; font-size: 15px; }
-        .app-container { display: flex; height: 100vh; width: 100vw; }
+        body { background-color: var(--bg-primary); color: var(--text-main); min-height: 100dvh; overflow-x: hidden; overflow-y: auto; font-size: 15px; }
+        .app-container { display: flex; min-height: 100dvh; width: 100%; overflow-x: hidden; }
         .sidebar { width: 260px; background-color: var(--bg-sidebar); color: var(--text-white); display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 100; }
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background-color: var(--bg-primary); }
         .brand { padding: 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #1e293b; }
@@ -104,7 +110,40 @@
         .toast.success { background-color: var(--color-success); }
         .toast.error { background-color: var(--color-error); }
         .toast.warning { background-color: var(--color-warning); }
-        @media (max-width: 1024px) { .sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); } .sidebar.active { transform: translateX(0); } .menu-toggle { display: block; } .venta-layout { grid-template-columns: 1fr; } .card-checkout { position: static; } .filters-grid { grid-template-columns: 1fr; } .section-actions { flex-direction: column; } .search-input { max-width: 100%; } }
+        @media (max-width: 1024px) {
+            body { height: auto; }
+            .app-container { flex-direction: column; min-height: 100dvh; }
+            .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: min(85vw, 320px); transform: translateX(-100%); box-shadow: 12px 0 24px rgba(15,23,42,0.2); }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { min-width: 0; width: 100%; }
+            .menu-toggle { display: block; }
+            .top-bar { height: auto; min-height: 70px; padding: 16px; gap: 12px; flex-wrap: wrap; }
+            .top-bar h1 { font-size: 18px; }
+            .top-bar-actions { margin-left: auto; }
+            .view-container { padding: 16px; }
+            .metrics-grid { grid-template-columns: 1fr; gap: 16px; margin-bottom: 16px; }
+            .dashboard-tables { grid-template-columns: 1fr; gap: 16px; }
+            .card, .metric-card, .table-card, .filters-card { padding: 16px; margin-bottom: 16px; }
+            .form-row { grid-template-columns: 1fr; }
+            .venta-layout { grid-template-columns: 1fr; gap: 16px; }
+            .card-search { padding: 12px 16px; }
+            .card-checkout { position: static; }
+            .filters-grid { grid-template-columns: 1fr; }
+            .section-actions { flex-direction: column; align-items: stretch; }
+            .search-input { max-width: 100%; }
+            .table-responsive { overflow-x: auto; }
+            .table-responsive table { min-width: 560px; }
+            .modal-card { margin: 16px; max-height: calc(100dvh - 32px); }
+        }
+        @media (max-width: 640px) {
+            .top-bar { align-items: flex-start; }
+            .top-bar-actions { width: 100%; justify-content: flex-end; }
+            .caja-status { font-size: 13px; padding: 8px 12px; }
+            .view-container { padding: 12px; }
+            .metric-info p { font-size: 24px; }
+            .btn { width: 100%; }
+            .filter-actions { flex-direction: column; }
+        }
         @media print { body * { visibility: hidden; } #modal-container.active, #modal-container.active * { visibility: visible; } #modal-container.active { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; } .modal-close, .modal-header, .no-print { display: none !important; } }
     </style>
 </head>
@@ -182,6 +221,11 @@
     <div class="toast-container" id="toast-container"></div>
 
     <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js').catch(console.error);
+            });
+        }
         const StorageCore = {
             init() {
                 if (!localStorage.getItem('nexos_productos')) localStorage.setItem('nexos_productos', JSON.stringify([]));
